@@ -6,16 +6,24 @@
     height: 240px;
 }
 .role .b1 {
-    /* background-color: rgb(252, 240, 222); */
-    border: 2px solid red;
+    /* border: 2px solid red; */
     width: 194px;
     height: 194px;
+    margin: 3px;
+}
+.role .b1.b {
+    border: 2px solid red;
     margin: 1px;
 }
 .role .b2 {
-    border: 2px solid blue;
+    /* border: 2px solid blue; */
     width: 188px;
     height: 188px;
+    margin: 3px;
+}
+.role .b2.b {
+    border: 2px solid blue;
+
     margin: 1px;
 }
 .role .toux {
@@ -23,6 +31,7 @@
     margin: 1px;
     width: 184px;
     height: 184px;
+    /* background-image: url("img/head1.jpg"); */
 }
 
 .role .state {
@@ -56,4 +65,15 @@
 .v2 .dutiao {
     background-color: yellowgreen;
     height: 100%;
+}
+
+#r1 {
+    position: absolute;
+    top: 30px;
+    left: 48px;
+}
+#r2 {
+    position: absolute;
+    top: 280px;
+    left: 48px;
 }
