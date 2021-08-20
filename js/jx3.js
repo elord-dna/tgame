@@ -1,24 +1,62 @@
-class Role {
-    constructor(id) {
-        this.id = id;
-        this.j = $('#'+id);
-        this.toux = $("#"+id+" .toux");
-    }
-    setTouxiang(img) {
-        this.toux.css("background-image","url("+img+")");
-    }
-}
+// class Role {
+//     constructor(id) {
+//         this.id = id;
+//         this.j = $('#'+id);
+//         this.toux = $("#"+id+" .toux");
+//     }
+//     setTouxiang(img) {
+//         this.toux.css("background-image","url("+img+")");
+//     }
+//     loadData(data) {}
+//     loadRole(role) {}
+//     showState() {}
+//     openBag() {}
+//     openStorage() {}
+//     putBag(obj, num) {}
+//     getBag(obj, num) {}
+//     putStorage(obj, num) {}
+//     getStorage(obj, num) {}
+//     useCost(obj, num) {}
+//     discardBag(obj, num) {}
+//     discardStorage(obj, num) {}
+
+//     save(t) {
+//         if(t==null) {
+//             // save all
+//         }
+//         if (t=='bag') {
+//             let sid = '';
+//             if (user.id!==null) {sid = user.id}
+//             if (this.name!=null) {
+//                 localStorage.setItem(sid+"_"+this.name+"_bag", JSON.stringify(this.bag));
+//             }
+//         }
+//     }
+// }
+
+var user = {}
 
 $(function(){
     var effect = {
         eChoose: function(id) {
-            let $b = $('#' + id).find('.b');
+            let $b = $('#' + id).find('.b1');
             if (!$b.hasClass('b')) {
                 $b.addClass('b');
             }
         },
         eDhoose: function(id) {
-            let $b = $('#' + id).find('.b');
+            let $b = $('#' + id).find('.b1');
+            if ($b.hasClass('b')) {
+                $b.removeClass('b');
+            }
+        },
+        fChoose: function(id) {
+            let $b = $('#' + id).find('.b2');
+            if (!$b.hasClass('b')) {
+                $b.addClass('b');
+            }
+        },
+        fDhoose: function(id) {
             if ($b.hasClass('b')) {
                 $b.removeClass('b');
             }
@@ -63,7 +101,7 @@ $(function(){
         },
         skillEffect: function() {
             this.currentChosen.forEach(function(ele){
-                let $r = $('#' + ele);
+                let $r = $(`#${ele}`);
                 let $state = $r.find('.state');
                 let l = parseInt(Math.random() * 50 + 50);
                 $state.find('.hp').css('width', l + "%");
