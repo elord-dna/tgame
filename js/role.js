@@ -12,7 +12,15 @@ class Role {
     showState() {}
     openBag() {}
     openStorage() {}
-    putBag(obj, num) {}
+    putBag(obj, num) {
+        if (!this.bag) {
+            this.bag = {};
+        }
+        let o = this.bag[obj];
+        let n = num;
+        if (o) {n += o.num}
+        this.bag[obj].num = n;
+    }
     getBag(obj, num) {}
     putStorage(obj, num) {}
     getStorage(obj, num) {}
