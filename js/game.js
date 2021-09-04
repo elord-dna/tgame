@@ -1,3 +1,16 @@
+
+var t_u = {
+    getValue: function(o, k) {
+        if(!o) {
+            return 0;
+        }
+        let v = o[k];
+        if(v) {
+            return v;
+        }
+        return 0;
+    }
+};
 /**
  * about equipment
  */
@@ -31,6 +44,8 @@ var t_effect = {
 var t_skill_L = {
     maxChooseNum: 1,
     currentChosen: [],
+    currentSkill: "",
+    state: 0,
     getCurrentChosen: function() {
         return this.currentChosen;
     },
@@ -58,12 +73,17 @@ var t_skill_L = {
         var that = this;
         $(document).on('keydown', function(e){
             let which = e.which;
-            if (which == 49) {
-                // todo
-                if (that.skillEffect != null) {
-                    that.skillEffect();
-                }
+            // console.log(which);
+            // skill choose
+            if (which >= 49 && which <= 57) {
+                //
             }
+            // if (which == 49) {
+            //     // todo
+            //     if (that.skillEffect != null) {
+            //         that.skillEffect();
+            //     }
+            // }
         });
     },
     skillEffect: function() {
@@ -77,7 +97,41 @@ var t_skill_L = {
 };
 
 var t_skill = {
-    generateWuliSkill: function() {}
+    generateWuliSkill: function() {},
+    normalAttack: function(target) {}
+};
+
+var t_quickBind = {
+    // [skill, target num, mp cost, hp cost]
+    "49": [normalAttack, 1, 0, 0]
 };
 
 var t_slist = {};
+
+var t_eList = {
+    e000000: function(t_obj) {
+        let maxHp = t_obj.MaxHp.base;
+        let maxShield = t_u.getValue(t_obj.MaxHp, "shield");
+
+        let hp = t_obj.Hp.base;
+        let shield = t_u.getValue(t_obj.Hp, "shield");
+
+        hp += 10 * (1 + t_obj.Hp_rev/100);
+        hp = parseInt(hp);
+        if (hp > maxHp) {
+            hp = maxHp;
+        }
+
+        shield += parseInt(10 * (1 + t_obj.Shield_rec/100));
+        if (maxShield < 10) {
+            maxShield = 10;
+        }
+        if (shield > maxShield) {
+            shield = maxShield;
+        }
+
+        t_obj.MaxHp.shield = maxShield;
+        t_obj.Hp.base = hp;
+        t_obj.Hp.shield = shield;
+    }
+};

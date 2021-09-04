@@ -108,7 +108,7 @@ $(function(){
             });
         }
     };
-    skill_L.onKeyBoard();
+    // skill_L.onKeyBoard();
 
     var r1 = new Role('r1');
     r1.setTouxiang("img/head1.jpg");
@@ -127,4 +127,31 @@ $(function(){
             skill_L.addTarget(this.id);
         }
     });
+
+    ////////////////////////////////////////////// testing
+    let test_data = {
+        Name: "ceshi",
+        MaxHp: {base: 100},
+        MaxMp: 100,
+        Hp: {base: 100},
+        Mp: 100,
+        Exp: 0,
+        Energy: 100,
+        Speed: 20,
+        Atk: {base: 10},
+        Def: {base: 10},
+        SkillList: [],
+        bag: []
+    };
+    r1.loadData(test_data);
+    r2.loadData(test_data);
+
+    // $(document).on('keydown', function(e){
+    //     let which = e.which;
+    //     // console.log(which);
+    //     if (which == 49) {
+    //         r1.receiveDamage(9);
+    //     }
+    // });
+    t_skill_L.onKeyBoard();
 });

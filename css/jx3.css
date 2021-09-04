@@ -46,6 +46,9 @@
     border: 1px solid burlywood;
     width:  188px;
     height: 10px;
+    text-align: center;
+    font-size: 12px;
+    position: relative;
 }
 .state .v2 {
     /* border: 1px solid burlywood; */
@@ -79,4 +82,11 @@
     position: absolute;
     top: 280px;
     left: 48px;
+}
+
+.v span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
 }

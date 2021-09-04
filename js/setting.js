@@ -20,4 +20,4 @@ var t_setting = {
      * @param {用户名}} username 
      */
     loadLocal: function(username) {}
-}
+};
