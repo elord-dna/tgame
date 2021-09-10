@@ -1,7 +1,7 @@
 class Skill {
     constructor(id) {
         this.id = id;
-        this.num = 1;  // default target num is 1
+        this.tarNum = 1;  // default target num is 1
         this.target = [];
     }
     addTarget(t) {
@@ -9,6 +9,9 @@ class Skill {
     }
     removeTarget() {
         this.target.shift();
+    }
+    clearTarget() {
+        this.target = [];
     }
     loadData(data) {
         this.tp = data[0];
@@ -49,9 +52,16 @@ class Skill {
         console.log(this.role.Name + "使用了" + castSpell + "LV" + this.Lv);
         this.Exp += 1;
         this.handler(this);
+        this._checkUpdate();
+    }
+    _checkUpdate() {
         if (this.Exp > Math.pow(2, this.Lv) + 9) {
             this.lvUp();
         }
+    }
+    gainExp(exp) {
+        this.Exp += exp;
+        this._checkUpdate();
     }
     lvUp() {
         console.log(this.Name + " level up!")
@@ -72,12 +82,29 @@ class Skill {
 }
 
 var t_handler = {
+    _isCt: function(t, skill) {
+        let r = skill.role.Ct;
+        r = r.base + r.buff + skill.act + skill.actA * skill.Lv;
+        if (r<0) {
+            return {"isCt": false};
+        }
+        if (r>100) {
+            r = 100;
+        }
+        if (Math.random()*100 < r) {
+            let re = skill.role.Cte;
+            re = re.base + re.buff + skill.acte + skill.acteA * skill.Lv;
+            return {"isCt": true, "cte": re};
+        }
+        return {"isCt": false};
+    },
     _defaultHandler: function(t, skill) {
         let tp = skill.tp;
+        let def = {};
         if (tp == 0) {
-            let def = t.Def;
+            def = t.Def;
         } else if (tp == 1) {
-            let def = t.SDef;
+            def = t.SDef;
         }
         def = def.base + def.buff;
         let lv = skill.Lv;
@@ -90,38 +117,72 @@ var t_handler = {
         if (a2 < 0) {a2 = 0;}
         let atk = (skill.ap + skill.apA * lv) * a1 + (skill.sp + skill.spA * lv) * a2;
         let atdDdef = atk/(def + 1);
+        let damage = 0;
         if (atdDdef < 0.01) {
-            return 1;
-        }
-        let bd = skill.bd + skill.bdA * lv;
-        let ad = skill.ad + skill.adA * lv;
-        let t = atdDdef - 1/atdDdef;
-        if (atdDdef < 1) {
-            let d2 = 1.5;
-            let damage = (bd + ad) * Math.pow(d2, t);
+            damage = 1;
+        } else {
+            let bd = skill.bd + skill.bdA * lv;
+            let ad = skill.ad + skill.adA * lv;
+            let t = atdDdef - 1/atdDdef;
+            if (atdDdef < 1) {
+                let d2 = 1.5;
+                damage = (bd + ad) * Math.pow(d2, t);
+            } else {
+                let d1 = 1.5;
+                let d2 = 1.4;
+                damage = bd * Math.pow(d1, atdDdef) + (bd + ad) * Math.pow(d2, t);
+            }
             damage = parseInt(damage);
-            return damage;
         }
-        let d1 = 1.5;
-        let d2 = 1.4;
-        let damage = bd * Math.pow(d1, atdDdef) + (bd + ad) * Math.pow(d2, t);
-        damage = parseInt(damage);
-        return damage;
+        let isCt = this._isCt(t, skill);
+        if (isCt['isCt']) {
+            damage = damage * (1 + isCt['cte']/100);
+            damage = parseInt(damage);
+        }
+        return {"damage": damage, "isCt": isCt['isCt']};
     },
     wlHandler: function(skill) {
         let tar = skill.target;
-        for (let i=0;i<len(tar);i++) {
-            let d = this._defaultHandler(tar[i], skill);
+        for (let i=0;i<tar.length;i++) {
+            let t = tar[i];
+            let d = t_handler._defaultHandler(t, skill);
+            console.log(d);
+            t.receiveDamage(d);
             // data change and animation
+            // reset target
+            skill.target = [];
         }
     }
 };
 
 var testSkill = [
-    0, 2, 1, 1, 1, [], [],
-    1, 0.1, 11, 0, 0.1, 0.1, 0,
-    0, [], [],
-    0, 0, 0, 
-    0.02, 0, 0, 0, 0,
-    "wuli", wlHandler
+    0, 2, 1, 1, 1, [], 1, 0.1,      // 8
+    11, 2, 20, 10, 0.1, 0.1, [], [],     // 8  16
+    0, 0, 0, 0.1, 0.02, 2, 0.5, 0,   // 8 24
+    0, 0, 0,
+    "wuli", t_handler.wlHandler
 ];
+var testLvData = {Exp: 0, Lv: 1};
+
+// this.tp = data[0];
+// this.tarType = data[1];
+// this.tarNum = data[2];
+// this.len = data[3];
+// this.area = data[4];
+// this.areaGd = data[5];
+// this.ap = data[6];  this.sp = data[7];
+// this.bd = data[8];  this.ad = data[9];
+// this.act = data[10];  this.acte = data[11];
+// this.actd = data[12];
+// this.ig = data[13];
+// this.bfs = data[14];
+// this.spes = data[15];
+// this.tarNumA = data[16];  this.lenA = data[17];
+// this.areaA = data[18];  this.apA = data[19];
+// this.spA = data[20];  this.bdA = data[21];
+// this.adA = data[22];  this.actA = data[23];
+// this.acteA = data[24];
+// this.actdA = data[25];
+// this.igA = data[26];
+// this.Name = data[27];
+// this.handler = data[28];

@@ -115,18 +115,18 @@ $(function(){
     var r2 = new Role('r2');
     r2.setTouxiang('img/head1.jpg');
     var all_r = $('.role');
-    all_r.on('click', function(e){
-        e.preventDefault();
-        let b = $(this).find('.b1');
-        // b.toggleClass('b');
-        if (b.hasClass('b')) {
-            b.removeClass('b');
-            skill_L.reTarget(this.id);
-        } else {
-            b.addClass('b');
-            skill_L.addTarget(this.id);
-        }
-    });
+    // all_r.on('click', function(e) {
+    //     e.preventDefault();
+    //     let b = $(this).find('.b1');
+    //     // b.toggleClass('b');
+    //     if (b.hasClass('b')) {
+    //         b.removeClass('b');
+    //         skill_L.reTarget(this.id);
+    //     } else {
+    //         b.addClass('b');
+    //         skill_L.addTarget(this.id);
+    //     }
+    // });
 
     ////////////////////////////////////////////// testing
     let test_data = {
@@ -138,20 +138,21 @@ $(function(){
         Exp: 0,
         Energy: 100,
         Speed: 20,
-        Atk: {base: 10},
-        Def: {base: 10},
+        Atk: {base: 10, buff:0},
+        Def: {base: 10, buff:0},
+        SAtk: {base: 5, buff:0},
+        SDef: {base: 5, buff:0},
+        Ct: {base: 10, buff:0},
+        Cte: {base: 35, buff: 10},
         SkillList: [],
         bag: []
     };
     r1.loadData(test_data);
     r2.loadData(test_data);
+    t_match.addRoleList("r1", r1);
+    t_match.addRoleList("r2", r2);
+    t_test_skill.bindUser(r1);
 
-    // $(document).on('keydown', function(e){
-    //     let which = e.which;
-    //     // console.log(which);
-    //     if (which == 49) {
-    //         r1.receiveDamage(9);
-    //     }
-    // });
     t_skill_L.onKeyBoard();
+    t_skill_L.onDubClick();
 });

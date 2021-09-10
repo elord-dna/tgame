@@ -23,6 +23,12 @@ class Role {
         this.Atk = data.Atk;       // {base: xx, buff: xx}
         this.Def = data.Def;
 
+        this.SAtk = data.SAtk;
+        this.SDef = data.SDef;
+
+        this.Ct = data.Ct;         // {base: xx, buff: xx}
+        this.Cte = data.Cte;
+
         this.SkillList = data.SkillList;  // [{id:id1, lv:xx}...]
         this.bag = data.bag;              // [{itemId: {}}]
 
@@ -67,8 +73,12 @@ class Role {
     }
     castSkill(skill, objs) {}
 
+    /**
+     * 
+     * @param {*} damage {damage: xx, isCt: xx}
+     */
     receiveDamage(damage) {
-        this.Hp.base -= damage;
+        this.Hp.base -= damage.damage;
         if (this.Hp.base < 0) {
             this.Hp.base = 0;
         }

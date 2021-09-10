@@ -24,6 +24,10 @@ var t_match = {
     all_alive: [],
     end: function() {
         // todo 结束
+    },
+    role_list: {},
+    addRoleList: function(id, role) {
+        t_match.role_list[id] = role;
     }
 };
 
@@ -38,28 +42,55 @@ var t_effect = {
             let $dutiao = role.frag.find('.dutiao');
         }
     },
-    stop: function() {}
+    stop: function() {},
+    eChoose: function(id) {
+        let $b = $('#' + id).find('.b1');
+        if (!$b.hasClass('b')) {
+            $b.addClass('b');
+        }
+    },
+    eDhoose: function(id) {
+        let $b = $('#' + id).find('.b1');
+        if ($b.hasClass('b')) {
+            $b.removeClass('b');
+        }
+    },
+    fChoose: function(id) {
+        let $b = $('#' + id).find('.b2');
+        if (!$b.hasClass('b')) {
+            $b.addClass('b');
+        }
+    },
+    fDhoose: function(id) {
+        if ($b.hasClass('b')) {
+            $b.removeClass('b');
+        }
+    }
 };
 
 var t_skill_L = {
     maxChooseNum: 1,
-    currentChosen: [],
-    currentSkill: "",
+    // currentChosen: [], // removed, placed by skill.target
+    currentSkill: null,
     state: 0,
-    getCurrentChosen: function() {
-        return this.currentChosen;
-    },
-    setCurrentChosen: function(cc) {
-        this.currentChosen = cc;
-    },
     addTarget: function(id) {  // 
-        let length = this.currentChosen.length;
-        while (length >= this.maxChooseNum) {
-            let rid = this.currentChosen.shift();
-            if (rid != null) {
-                effect.eDhoose(rid);
-            }
-            length--;
+        let skill = this.currentSkill;
+        if (skill == null || skill == "") {
+            return;
+        }
+        let length = skill.target.length;
+        // while (length > skill.tarNum) {
+        //     let rid = skill.target.shift();
+        //     if (rid != null) {
+        //         t_effect.eDhoose(rid);
+        //     }
+        //     length--;
+        // }
+        if (length < skill.tarNum) {
+            skill.addTarget(t_match.role_list[id]);
+        }
+        if (length == skill.tarNum) {
+            t_skill_L.castSkill();
         }
         this.currentChosen.push(id);
     },
@@ -73,18 +104,34 @@ var t_skill_L = {
         var that = this;
         $(document).on('keydown', function(e){
             let which = e.which;
-            // console.log(which);
-            // skill choose
             if (which >= 49 && which <= 57) {
-                //
+                t_skill_L.currentSkill = t_quickBind[""+which]
+                // console.log(that.currentSkill);
             }
-            // if (which == 49) {
-            //     // todo
-            //     if (that.skillEffect != null) {
-            //         that.skillEffect();
-            //     }
-            // }
+            //
         });
+    },
+    onDubClick: function() {
+        var that = this;
+        $('.role').on("dblclick", function(e) {
+            e.preventDefault();
+            that.castSkill(t_match.role_list[this.id], that.currentSkill);
+        });
+    },
+    castSkill: function(skill) {
+        // let tar = this.currentChosen;
+        if (skill == null || skill == "") {
+            alert("choose a skill first");
+            return;
+        }
+        // console.log(skill.Name + " was used to " + tar.Name);
+        // $('.role').off("dblclick");
+        // skill.addTarget(tar);
+        skill.handler(skill);
+        // skill.removeTarget();
+        
+        this.currentSkill = null;
+        this.currentChosen = null;
     },
     skillEffect: function() {
         this.currentChosen.forEach(function(ele){
@@ -101,9 +148,14 @@ var t_skill = {
     normalAttack: function(target) {}
 };
 
+var t_test_skill = new Skill("a2");
+t_test_skill.loadData(testSkill);
+t_test_skill.loadLv(testLvData);
+
 var t_quickBind = {
     // [skill, target num, mp cost, hp cost]
-    "49": [normalAttack, 1, 0, 0]
+    // "49": [normalAttack, 1, 0, 0]
+    "49": t_test_skill
 };
 
 var t_slist = {};
