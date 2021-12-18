@@ -11,6 +11,7 @@ class Role {
         this.toux.css("background-image","url("+img+")");
     }
     loadData(data) {
+        data = JSON.parse(JSON.stringify(data));
         this.Name = data.Name;
         this.MaxHp = data.MaxHp;   // {base: xx, shield: xx}
         this.MaxMp = data.MaxMp;
@@ -36,6 +37,20 @@ class Role {
         // console.log(this);
     }
     loadRole(role) {}
+    getDefValue(type) {
+        if (type == 0) { return this.Def.base + this.Def.buff;}
+        return this.SDef.base + this.SDef.buff;
+    }
+    getAtkValue() {
+        let atk = this.Atk.base + this.Atk.buff;
+        if (atk < 0) {atk = 0;}
+        return atk;
+    }
+    getSAtkValue() {
+        let atk = this.SAtk.base + this.SAtk.buff;
+        if (atk < 0) {atk = 0;}
+        return atk;
+    }
     showState() {}
     openBag() {
         if (!this.bag) {
@@ -87,7 +102,8 @@ class Role {
 
     _stateShow() {
         let l_hp = this.Hp.base / this.MaxHp.base * 100;
-        this.state.find('.hp').css('width', l_hp + "%");
+        // this.state.find('.hp').css('width', l_hp + "%");
+        this.state.find('.hp').animate({'width': l_hp + "%"});
         let l_mp = this.Mp / this.MaxMp * 100;
         this.state.find('.mp').css('width', l_mp + "%");
 

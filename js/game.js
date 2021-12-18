@@ -26,9 +26,15 @@ var t_match = {
         // todo 结束
     },
     role_list: {},
+    role_id_list: [],
     addRoleList: function(id, role) {
+        if (this.role_id_list.indexOf(id) == -1) {
+            this.role_id_list.push(id);
+        }
         t_match.role_list[id] = role;
-    }
+    },
+    // 返回所有允许的目标id
+    getAllPermitTargetsId: function(skill) {}
 };
 
 var t_effect = {
@@ -65,6 +71,21 @@ var t_effect = {
         if ($b.hasClass('b')) {
             $b.removeClass('b');
         }
+    },
+    showDiv: function(x, y) {
+        let $msg = $('#msg');
+        if (!$msg.hasClass('hide')) {
+            return;
+        }
+        // $msg.css({'left': x, 'top': y});
+        $msg.removeClass('hide');
+    },
+    hideDiv: function() {
+        let $msg = $('#msg');
+        if ($msg.hasClass('hide')) {
+            return;
+        }
+        $msg.addClass('hide');
     }
 };
 
@@ -79,20 +100,15 @@ var t_skill_L = {
             return;
         }
         let length = skill.target.length;
-        // while (length > skill.tarNum) {
-        //     let rid = skill.target.shift();
-        //     if (rid != null) {
-        //         t_effect.eDhoose(rid);
-        //     }
-        //     length--;
-        // }
         if (length < skill.tarNum) {
             skill.addTarget(t_match.role_list[id]);
+            t_effect.eChoose(id);
+            length += 1;
         }
         if (length == skill.tarNum) {
-            t_skill_L.castSkill();
+            this.castSkill(skill);
         }
-        this.currentChosen.push(id);
+        // this.currentChosen.push(id);
     },
     reTarget: function(id) {  // 
         let index = this.currentChosen.indexOf(id);
@@ -105,7 +121,7 @@ var t_skill_L = {
         $(document).on('keydown', function(e){
             let which = e.which;
             if (which >= 49 && which <= 57) {
-                t_skill_L.currentSkill = t_quickBind[""+which]
+                that.currentSkill = t_quickBind[""+which]
                 // console.log(that.currentSkill);
             }
             //
@@ -115,11 +131,12 @@ var t_skill_L = {
         var that = this;
         $('.role').on("dblclick", function(e) {
             e.preventDefault();
-            that.castSkill(t_match.role_list[this.id], that.currentSkill);
+            that.addTarget(this.id);
+            // that.castSkill(t_match.role_list[this.id], that.currentSkill);
+            // that.castSkill(that.currentSkill);
         });
     },
     castSkill: function(skill) {
-        // let tar = this.currentChosen;
         if (skill == null || skill == "") {
             alert("choose a skill first");
             return;
@@ -127,11 +144,18 @@ var t_skill_L = {
         // console.log(skill.Name + " was used to " + tar.Name);
         // $('.role').off("dblclick");
         // skill.addTarget(tar);
-        skill.handler(skill);
+        let t = skill.target;
+        skill.cast();
         // skill.removeTarget();
         
-        this.currentSkill = null;
-        this.currentChosen = null;
+        // this.currentSkill = null;
+        // remove target effect
+        setTimeout(function() {
+            for (let i in t) {
+                let r = t[i];
+                t_effect.eDhoose(r.id);
+            }
+        }, 300);
     },
     skillEffect: function() {
         this.currentChosen.forEach(function(ele){
@@ -149,13 +173,18 @@ var t_skill = {
 };
 
 var t_test_skill = new Skill("a2");
+var t_test_skill2 = new Skill("a3");
 t_test_skill.loadData(testSkill);
 t_test_skill.loadLv(testLvData);
+
+t_test_skill2.loadData(testSkill2);
+t_test_skill2.loadLv(testLvData);
 
 var t_quickBind = {
     // [skill, target num, mp cost, hp cost]
     // "49": [normalAttack, 1, 0, 0]
-    "49": t_test_skill
+    "49": t_test_skill,
+    "50": t_test_skill2
 };
 
 var t_slist = {};

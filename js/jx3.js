@@ -1,39 +1,3 @@
-// class Role {
-//     constructor(id) {
-//         this.id = id;
-//         this.j = $('#'+id);
-//         this.toux = $("#"+id+" .toux");
-//     }
-//     setTouxiang(img) {
-//         this.toux.css("background-image","url("+img+")");
-//     }
-//     loadData(data) {}
-//     loadRole(role) {}
-//     showState() {}
-//     openBag() {}
-//     openStorage() {}
-//     putBag(obj, num) {}
-//     getBag(obj, num) {}
-//     putStorage(obj, num) {}
-//     getStorage(obj, num) {}
-//     useCost(obj, num) {}
-//     discardBag(obj, num) {}
-//     discardStorage(obj, num) {}
-
-//     save(t) {
-//         if(t==null) {
-//             // save all
-//         }
-//         if (t=='bag') {
-//             let sid = '';
-//             if (user.id!==null) {sid = user.id}
-//             if (this.name!=null) {
-//                 localStorage.setItem(sid+"_"+this.name+"_bag", JSON.stringify(this.bag));
-//             }
-//         }
-//     }
-// }
-
 var user = {}
 
 $(function(){
@@ -138,8 +102,26 @@ $(function(){
         Exp: 0,
         Energy: 100,
         Speed: 20,
+        Atk: {base: 13, buff:0},
+        Def: {base: 10, buff:2},
+        SAtk: {base: 5, buff:0},
+        SDef: {base: 5, buff:0},
+        Ct: {base: 19, buff:0},
+        Cte: {base: 35, buff: 10},
+        SkillList: [],
+        bag: []
+    };
+    let test_data2 = {
+        Name: "ceshi2",
+        MaxHp: {base: 700},
+        MaxMp: 100,
+        Hp: {base: 700},
+        Mp: 100,
+        Exp: 0,
+        Energy: 100,
+        Speed: 20,
         Atk: {base: 10, buff:0},
-        Def: {base: 10, buff:0},
+        Def: {base: 13, buff:2},
         SAtk: {base: 5, buff:0},
         SDef: {base: 5, buff:0},
         Ct: {base: 10, buff:0},
@@ -148,11 +130,29 @@ $(function(){
         bag: []
     };
     r1.loadData(test_data);
-    r2.loadData(test_data);
+    r2.loadData(test_data2);
     t_match.addRoleList("r1", r1);
     t_match.addRoleList("r2", r2);
     t_test_skill.bindUser(r1);
+    t_test_skill2.bindUser(r1);
 
     t_skill_L.onKeyBoard();
     t_skill_L.onDubClick();
+
+    /// test effect
+    $('.toux').mouseenter(function(e){
+        e.preventDefault();
+        t_effect.showDiv(e.clientX, e.clientY);
+    });
+    $('.toux').mouseleave(function(e) {
+        // console.log('out');
+        e.preventDefault();
+        t_effect.hideDiv();
+    });
+    $('.toux').mousemove(function(e) {
+        $('#msg').css({'left': e.clientX + 10, 'top': e.clientY + 10});
+    });
+    // $(document).on('mousemove', function(e) {
+    //     console.log(e.clientX);
+    // });
 });

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="cn">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="css/element-plus.css" />
+        <!-- <link rel="stylesheet" href="https://unpkg.com/element3/lib/theme-chalk/index.css"/> -->
+        <link rel="stylesheet" type="text/css" href="css/mxd.css" />
+        <script src="js/vue3.js" type="text/javascript"></script>
+        <script src="js/element-plus.js" type="text/javascript"></script>
+        <script src="js/template.js" type="text/javascript"></script>
+        <script src="js/potential.js" type="text/javascript"></script>
+        <script src="js/mxdskill.js" type="text/javascript"></script>
+    </head>
+<body>
+    <div id="demo">
+      <el-tabs v-model="activeName">
+        <el-tab-pane label="主要" name="Primary">
+          <el-space wrap alignment="flex-start">
+            <el-card>
+              <table>
+                <tr v-for="item in items">
+                  <td v-for="it in item" class="etd">
+                    <cpn-equipment v-if="it.type!=null" 
+                    :value="it.value" @show-type="show(it)" @cancel="unpick(it)"
+                    :style="[{backgroundImage: geturi(it.bgi)}]"></cpn-equipment>
+                  </td>
+                </tr>
+              </table>
+            </el-card>
+            <el-card>
+              <div>
+                <label for="job">职业:&nbsp;</label>
+                <select id="job" v-model="selectedJob" @change="jobChange">
+                  <option value="">-- Choose a job --</option>
+                  <option v-for="job in jobs" :value="job.name+','+job.type">{{jobName(job)}}</option>
+                </select>
+              </div>
+              <div>
+                <label for="level">等级:&nbsp;</label>
+                <input type="number" v-model="level" @change="lvChange" />
+              </div>
+              <div>
+                <label for="level">神秘:&nbsp;</label>
+                <input type="number" v-model="Arc" @change="ArcChange" />
+              </div>
+              <div v-for="d in details" :v_key="key2">
+                <cpn-data v-model:detail="d"></cpn-data>
+              </div>
+            </el-card>
+          </el-space>
+        </el-tab-pane>
+        <el-tab-pane label="其他" name="Secondary"></el-tab-pane>
+        <el-tab-pane label="更多功能" name="More"></el-tab-pane>
+      </el-tabs>
+
+      <el-drawer v-model="state.hasEquip" title="装备" size="33%">
+        <el-descriptions title="装备信息" :column="1" border size="mini" :key="key">
+          <template #extra>
+            <!-- <i class="el-icon-success"></i> -->
+            <el-button type="info" size='mini' plain @click="equipmentEnhence">强化</el-button>
+            <el-button type="success" size='mini' plain @click="saveScroll">保存</el-button>
+            <el-button type="danger" size='mini' plain @click="cancelScroll">取消</el-button>
+          </template>
+          <template v-if="selectedEquip != null">
+            <el-descriptions-item label="攻击力" v-if="selectedEquip.total.atk!=null">{{selectedEquip.total.atk}}</el-descriptions-item>
+            <el-descriptions-item label="魔法力" v-if="selectedEquip.total.matk!=null">{{selectedEquip.total.matk}}</el-descriptions-item>
+            <el-descriptions-item label="力量" v-if="selectedEquip.total.str!=null">{{selectedEquip.total.str}}</el-descriptions-item>
+            <el-descriptions-item label="敏捷" v-if="selectedEquip.total.dex!=null">{{selectedEquip.total.dex}}</el-descriptions-item>
+            <el-descriptions-item label="智力" v-if="selectedEquip.total.int!=null">{{selectedEquip.total.int}}</el-descriptions-item>
+            <el-descriptions-item label="运气" v-if="selectedEquip.total.luk!=null">{{selectedEquip.total.luk}}</el-descriptions-item>
+            <el-descriptions-item label="HP" v-if="selectedEquip.total.hp!=null">{{selectedEquip.total.hp}}</el-descriptions-item>
+            <el-descriptions-item label="全属性" v-if="selectedEquip.total.asp!=null">{{selectedEquip.total.asp}}</el-descriptions-item>
+            <el-descriptions-item label="伤害" v-if="selectedEquip.total.damage!=null">{{selectedEquip.total.damage}}</el-descriptions-item>
+            <el-descriptions-item label="Boss" v-if="selectedEquip.total.boss!=null">{{selectedEquip.total.boss}}</el-descriptions-item>
+            <el-descriptions-item label="无视" v-if="selectedEquip.total.ign!=null">{{selectedEquip.total.ign}}</el-descriptions-item>
+            <el-descriptions-item label="潜能" width="320px">
+              <el-select-v2 v-model="potential[0]" :options="p_options" 
+              placeholder="Please Select" filterable style="width: 160px" size="mini"></el-select-v2>
+              <el-select-v2 v-model="potential[1]" :options="p_options" 
+              placeholder="Please Select" filterable style="width: 160px" size="mini"></el-select-v2>
+              <el-select-v2 v-model="potential[2]" :options="p_options" 
+              placeholder="Please Select" filterable style="width: 160px" size="mini"></el-select-v2>
+            </el-descriptions-item>
+            <el-descriptions-item label="附加潜能">
+              <el-select-v2 v-model="addPotential[0]" :options="ap_options" 
+              placeholder="Please Select" filterable style="width: 160px" size="mini"></el-select-v2>
+              <el-select-v2 v-model="addPotential[1]" :options="ap_options" 
+              placeholder="Please Select" filterable style="width: 160px" size="mini"></el-select-v2>
+              <el-select-v2 v-model="addPotential[2]" :options="ap_options" 
+              placeholder="Please Select" filterable style="width: 160px" size="mini"></el-select-v2>
+            </el-descriptions-item>
+          </template>
+        </el-descriptions>
+        <el-drawer v-model="state.appendix" title="强化" :append-to-body="true" size="40%">
+          <el-table :data="equipmentDetail" style="width: 100%" size="mini" border :key="detailKey">
+            <el-table-column property="pp" label="属性" width="80"></el-table-column>
+            <el-table-column property="base" label="基本属性" width="80"></el-table-column>
+            <el-table-column property="scroll" label="卷轴" width="80"></el-table-column>
+            <el-table-column property="bonus" label="火花" width="80"></el-table-column>
+            <el-table-column property="star" label="星之力"></el-table-column>
+          </el-table>
+          <el-divider></el-divider>
+          <!-- <el-button type="info" size='mini' plain @click="enhence(1)">15痕迹</el-button>
+          <el-button type="info" size='mini' plain @click="enhence(2)">30痕迹</el-button>
+          <el-button type="info" size='mini' plain @click="enhence(3)">70痕迹</el-button>
+          <el-button type="info" size='mini' plain @click="enhence(4)">100痕迹</el-button> -->
+          <el-radio-group v-model="enhenceChoice.type" size="small">
+            <el-radio-button v-for="t in enhenceChoice.option1" :key="t" :label="t">
+              {{t}}痕迹
+            </el-radio-button>
+            <!-- <el-checkbox-button :true-label="a0">15痕迹</el-checkbox-button>
+            <el-checkbox-button :true-label="a1">30痕迹</el-checkbox-button>
+            <el-checkbox-button :true-label="a2">70痕迹</el-checkbox-button>
+            <el-checkbox-button :true-label="a3">100痕迹</el-checkbox-button> -->
+          </el-radio-group>
+          <el-divider></el-divider>
+          <el-radio-group v-model="enhenceChoice.main" size="small">
+            <el-radio-button v-for="m in enhenceChoice.option2" :key="m" :label="m">
+              {{m}}
+            </el-radio-button>
+            <!-- <el-checkbox-button :true-label="b0">力量</el-checkbox-button>
+            <el-checkbox-button :true-label="b1">敏捷</el-checkbox-button>
+            <el-checkbox-button :true-label="b2">智力</el-checkbox-button>
+            <el-checkbox-button :true-label="b3">运气</el-checkbox-button>
+            <el-checkbox-button :true-label="b4">体力</el-checkbox-button> -->
+          </el-radio-group>
+          <el-divider></el-divider>
+          <el-button type="info" size='mini' plain>强大火花</el-button>
+          <el-button type="info" size='mini' plain>普通火花</el-button>
+          <el-divider></el-divider>
+          <el-check-tag type="info" effect="plain" :checked="state.fate" @change="vealfate">必成</el-check-tag>
+          <el-check-tag type="info" effect="plain" :checked="state.hot" style="margin-left: 8px;" @change="vealhot">热力</el-check-tag>
+          <el-divider></el-divider>
+          <el-button type="info" plain>强化</el-button>
+          <el-button type="info" plain @click="starForcePower">上星</el-button>
+          <el-divider></el-divider>
+        </el-drawer>
+      </el-drawer>
+
+      <el-drawer v-model="state.showHyper" 
+      title="超级属性" size="100%" direction="ttb">
+        <!-- todo -->
+      </el-drawer>
+
+
+      <el-dialog v-model="dvis" :title="vtitle">
+        <el-card v-for="e in Aequips" @click="pick(e)">
+          <img :src="e.images"></img>
+        </el-card>
+        <p v-if="emptyOfEquips">没有呀</p>
+      </el-dialog>
+      <!-- <el-dialog></el-dialog> -->
+    </div>
+</body>
+<script src="js/mxd.js" type="text/javascript" charset="utf-8"></script>
+<script>
+  // let det = role.detail();
+  const app = Vue.createApp({
+    data() {
+      return {
+        // dvis: false,
+        activeName: "Primary",
+        selectedJob: '',
+        selectedEquip: null,
+        equipmentDetail: null,
+        state: {hasEquip: Vue.ref(false), appendix: Vue.ref(false), fate: Vue.ref(true), hot:Vue.ref(false), showHyper:Vue.ref(false)},
+        items: [
+          [{type:"ring",value:"",p:"0",bgi:""},{},{type: "hat",  value: "", bgi:""},{},{type: "emblem", value: "",bgi:""}],
+          [{type:"ring",value:"",p:"1",bgi:""},{type: "pendant",p:"1", value: "", bgi:""},{type: "face", value: "",bgi:""},{type: "pocket", value: "",bgi:""},{type: "badge", value: "",bgi:""}],
+          [{type:"ring",value:"",p:"2",bgi:""},{type: "pendant",p:"0", value: "", bgi:""},{type: "eye", value: "",bgi:""},{type: "earring", value: "",bgi:""},{type: "medal", value: "",bgi:""}],
+          [{type:"ring",value:"",p:"3",bgi:""},{type: "weapon",  value: "", bgi:"", detail: ""},{type: "top", value: "", overall: false,bgi:""},{type: "shoulder", value: "",bgi:""},{type: "secondary", value: "", detail: "",bgi:""}],
+          [{type:"ring",value:"",p:"4",bgi:""},{type: "belt",    value: "", bgi:""},{type: "bottom", value: "",bgi:""},{type: "glove", value: "",bgi:""},{type: "cape", value: "",bgi:""}],
+          [{type:"ring",value:"",p:"5",bgi:""},{},{type: "shoe", value: "", bgi:""},{type: "android", value: "",bgi:""},{type: "heart", value: "",bgi:"",}],
+        ],
+        jobs: jobList,
+        Aequips: [],
+        enhenceChoice: {type:'15',main:'力量',
+          option1:["15","30","70","100"], option2:["力量","敏捷","智力","运气","体力"]},
+        key: Vue.ref(0),  // kongzhi gengxin
+        key2: Vue.ref(0),  // 属性值更新
+        detailKey: Vue.ref(0),
+        currentPart: null, // 当前选择部位
+        level: 200,
+        Arc: 3,
+        details: role.detail,
+        potential: Vue.ref(['','','']),
+        p_options: POTENTIAL_OPTIONS,
+        addPotential: Vue.ref(['','','']),
+        ap_options: []
+      }
+    },
+    setup() {
+        let dvis = Vue.ref(false);
+        let vtitle = "testTitle";
+        return { dvis, vtitle }
+    },
+    components: {
+      'cpn-equipment': cpnEquipment,
+      'cpn-data': cpnData
+    },
+    methods: {
+      show(it) {
+        // console.log(this.selectedJob);  // 职业，职业群
+        if (!it.value&&!role.hasEquip(it.type, it.p)) { // 如果没有装备 判断是否需要继续检查role.equipment
+          let jg = this.selectedJob.split(','); 
+          this.dvis = true;
+          this.vtitle = Translate[it.type] + "装备";
+          this.Aequips = selectEquipment(it.type, jg[1], role.job);
+          this.currentPart = it;
+          console.log(it.type, jg[1], this.Aequips);
+        } else {
+          this.state.hasEquip = true;
+          const me = it.value;
+          this.selectedEquip = me.copy();
+          console.log(this.selectedEquip);
+          this.potential = this.selectedEquip.potential;
+          this.addPotential = this.selectedEquip.addPotential;
+          this.key ++;
+        }
+      },
+      pick(e) {
+        let me = new MxdEquip(e);
+        this.currentPart.bgi = e.images;
+        this.currentPart.value = me;
+        role.equip(me, this.currentPart.p);
+        this.dvis = false;
+        this.key2 ++;
+      },
+      unpick(it) {
+        it.bgi = "";
+        role.unequip(it.type, it.p);
+        it.value = null;
+        this.key2 ++;
+      },
+      // handleClose(done) {
+      //   this.currentPart = null;
+      //   done();
+      // },
+      jobName(job) {
+        if (job.eName != "") {
+          return job.name + "(" + job.eName + ")";
+        }
+        return job.name;
+      },
+      geturi(v) {
+        if(v == "") {
+          return "url(img/plus.jpg)";
+        }
+        return "url("+v+")";
+      },
+      jobChange() { // 选择职业
+        let job = this.selectedJob.split(',');
+        if (job.length > 1) {
+          role.setJob({name: job[0], type: job[1]});
+          this.details = role.detail;
+        }
+      },
+      lvChange(v) {
+        role.setLv(this.level);
+        this.key ++;
+        // console.log(this.level);
+      },
+      ArcChange() {
+        console.log(this.Arc);
+      },
+      equipmentEnhence() {
+        this.state.appendix=true;
+        this.equipmentDetail = toEquipmentDetail(this.selectedEquip);
+      },
+      saveScroll() {
+        let newEquip = toEquipmentData(this.selectedEquip, this.equipmentDetail);
+        this.currentPart.value = newEquip;
+        role.equip(newEquip, this.currentPart.p);
+        // role.updateEquiment();
+        this.state.hasEquip = false;
+        this.key2 ++;
+      },
+      enhence(v) {
+        let type = this.selectedEquip.base.type;
+        if (v == 1 && type != WEAPON) {
+          ElementPlus.ElMessage.warning("不是武器你还想上15痕迹?");
+        }
+        console.log(v);
+      },
+      cancelScroll() {
+        this.state.hasEquip = false;
+      },
+      vealfate(v) {this.state.fate = v;},
+      vealhot(v) {
+        this.state.hot = v;
+      },
+      starForcePower() {
+        // 星之力强化
+        let star = this.selectedEquip.star;
+        let isSuccess = false;
+        if (this.state.fate) {
+          isSuccess = true;
+        } else {
+          let p = starForcePossibility(star.star);
+          let r = Math.random() * 100;
+          if (r < p.success) {
+            isSuccess = true;
+          } else if (r < p.success + p.fail) {
+            isSuccess = false;
+          } else {
+            ElementPlus.ElMessage.warning("抱歉，你的装备损坏了，但在这里，你不用重新来过");
+            return;
+          }
+        }
+        if (isSuccess) {
+          star.star ++;
+          let upv = starForceUpValue(star.star, this.selectedEquip.base.lv);
+          star['str'] = getD(star,'str') + upv.m,
+          star['dex'] = getD(star,'dex') + upv.m,
+          star['int'] = getD(star,'int') + upv.m,
+          star['luk'] = getD(star,'luk') + upv.m;
+          let upatk = 0;
+          if (this.selectedEquip.base.type == WEAPON) {
+            upatk = Math.floor(this.selectedEquip.total.atk / 50) + 1;
+            star['atk'] = getD(star,'atk') + upatk + upv.wa;
+            this.selectedEquip.total.atk += upatk + upv.wa; // 为武器强化更新total
+          } else {
+            star['atk'] = getD(star,'atk') + upv.a;
+          }
+          // 刷新selectedEquip的total?
+        } else if (star.star > 11) {  // 掉星星的操作
+          let upv = starForceUpValue(star.star, this.selectedEquip.base.lv);
+          star.star --;
+          star.str -= upv.m, star.dex -= upv.m, star.int -= upv.m, star.luk -= upv.m;
+          let upatk = 0;
+          if (this.selectedEquip.base.type == WEAPON) {
+            upatk = Math.floor(this.selectEquipment.total.atk / 50) + 1;
+            star.atk -= upatk + upv.wa;
+            this.selectedEquip.total.atk -= upatk + upv.wa; // 为武器强化更新total
+            if (Math.floor((this.selectedEquip.total.atk - upatk - up.wa)/50) + 1 < upatk) {
+              star.atk += 1;
+              this.selectedEquip.total.atk += 1;
+            }
+          } else {
+            star.atk -= upv.a;
+          }
+          // 刷新detail
+        }
+        this.equipmentDetail = toEquipmentDetail(this.selectedEquip);
+        this.detailKey ++;
+      }
+    },
+    computed: {
+      emptyOfEquips() {
+        return this.Aequips.length == 0;
+      },
+    }
+  });
+  app.use(ElementPlus);
+  let vm = app.mount('#demo');
+  // role.equip();
+</script>
+</html>

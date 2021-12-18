@@ -90,3 +90,17 @@
     left: 0;
     right: 0;
 }
+
+#msg {
+    position: absolute;
+    width: 100px;
+    height: 200px;
+    background-color: aqua;
+    z-index: 10;
+}
+.hide {
+    display: none;
+}
+.show {
+    display: block;
+}

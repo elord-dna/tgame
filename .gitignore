@@ -1,1 +1,4 @@
-img/head1.jpg
+img/*/*.jpg
+img/*/*.png
+img/*.png
+img/*.jpg
