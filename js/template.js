@@ -80,12 +80,12 @@ const statsW = {
     XEN: {STR:3, INT:0, DEX: 3, LUK: 3}
 };
 const ArcW = {
-    STR: {p: 1, v: 100},
-    DEX: {p: 2, v: 100},
-    INT: {p: 3, v: 100},
-    LUK: {p: 4, v: 100},
-    HP:  {p: 5, v: 1750},
-    XEN: {p: [1,2,4], v: 39}
+    STR: {p: 2, v: 100},
+    DEX: {p: 3, v: 100},
+    INT: {p: 4, v: 100},
+    LUK: {p: 5, v: 100},
+    HP:  {p: 6, v: 1750},
+    XEN: {p: [2,3,5], v: 39}
 };
 
 const jobList = [

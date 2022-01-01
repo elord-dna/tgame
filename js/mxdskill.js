@@ -14,7 +14,7 @@ const CHUXINZHE = {
             let matk = wp.total.matk;
             let atkplus = Math.floor(matk*0.35);
             let max_atk = Math.floor(atk * 0.15);
-            role.ATK += Math.min(atkplus, max_atk);
+            role.attr.atk.f += Math.min(atkplus, max_atk);
         }
     },type:PASSIVE
 }, JIBENSUYANG = {
@@ -45,8 +45,9 @@ const CHUXINZHE = {
     name:"功成名就",url:"img/skill/gongchengmingjiu.png",effect:{atk:30,boss:10,ctr:20,hpp:15},type:PASSIVE
 };
 // ==================================== Adele
+// b buff  d debuff p passive a attack
 const skill = {
-    "御剑骑士":{b: [GONGZHENG_BUFF,YIRENDEYONGSHI],d: [YUJIANSHOUQIAO,JIANZHOUZHIYIN],p: [CHUXINZHE,MOLIXIANLU,JIBENSUYANG,
+    "御剑骑士":{b: [GONGZHENG_BUFF,YIRENDEYONGSHI],d: [YUJIANSHOUQIAO,JIANZHOUZHIYIN],p: [CHUXINZHE,HUIYI,MOLIXIANLU,JIBENSUYANG,
         JINGTONG,XUNLIAN,NAILI,RENKE,ZHUANJIA,JINSHOUZHI,GONGCHENGMINGJIU],a: [ZHANJUE]
     }
 };

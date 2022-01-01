@@ -30,16 +30,21 @@ const cpnData = {
 };
 
 /// ======================== Logic part
+class Attr {
+    constructor(base) {
+        this.base = base;
+        this.p = 0;
+        this.f = 0;
+    }
+    total() {
+        return this.base * (1+this.p/100) + this.f;
+    }
+}
+
 class MxdRole {
     constructor(job) {
         this.lv = 200;  // 等级
-        this.equipments = {};
         this.setJob(job);
-        this.total = null;
-        this.luck = {hatLuck:false,shoulderLuck:false,
-            gloveLuck:false,weaponLuck:false,ringLuck:false};
-        this.suitCount = {}; // {suitname: count}
-        this.ese = []; // 已有的套装属性加成
     }
 
     getAtkType() {
@@ -56,35 +61,35 @@ class MxdRole {
         let name = this.job.name;
         if (type == "法师") {
             this.statsWeight = statsW.MAG;
-            this.mainStats = "INT";
+            this.mainStats = "int";
             this.ArcT = ArcW.INT;
         } else if (type == "弓箭手") {
             this.statsWeight = statsW.ARCHER;
-            this.mainStats = "DEX";
+            this.mainStats = "dex";
             this.ArcT = ArcW.DEX;
         } else if (type == "飞侠") {
             this.statsWeight = statsW.THIEF;
-            this.mainStats = "LUK";
+            this.mainStats = "luk";
             if (name == "侠盗" || name == "暗影双刀" || name == "魔链影士") {
                 this.statsWeight = statsW.SHUANGDAO;
             }
             this.ArcT = ArcW.LUK;
         } else if (type == "海盗") {
             this.statsWeight = statsW.PIRATE_STR;
-            this.mainStats = "STR";
+            this.mainStats = "str";
             this.ArcT = ArcW.STR;
             if (name == "爆莉萌天使" || name == "机械师" || name == "船长") {
                 this.statsWeight = statsW.PIRATE_DEX;
-                this.mainStats = "DEX";
+                this.mainStats = "dex";
                 this.ArcT = ArcW.DEX;
             }
         } else if (type == "战士") {
             this.statsWeight = statsW.FIGHT;
-            this.mainStats = "STR";
+            this.mainStats = "str";
             this.ArcT = ArcW.STR;
             if (name == "恶魔复仇者") {
                 this.statsWeight = statsW.HP;
-                this.mainStats = "HP";
+                this.mainStats = "hp";
                 this.ArcT = ArcW.HP;
             }
         } else {
@@ -96,33 +101,55 @@ class MxdRole {
 
     setLv(lv) {
         this.lv = lv;
-        this.generateBasicData(); // 重设基础属性
-        this._updateDetail();
+        this.updateBornData();
+        this.updateDetail();
     }
 
     setJob(job) {
         this.job = job;
         this.init();  // 再次初始化
-        this._updateDetail();
     }
 
     init() {
-        this.getAtkType();  // 攻击属性
+        this.equipments = {};
+        this.total = null;
+        this.luck = {hatLuck:false,shoulderLuck:false,
+            gloveLuck:false,weaponLuck:false,ringLuck:false};
+        this.suitCount = {}; // {suitname: count}
+        this.ese = []; // 已有的套装属性加成
+        // base 基础 p 百分比 f 最终加成 t 总和
+        // 重写的 {hp:{base:10,p:0,f:0,t:10}}
+        this.attr = {
+            hp:     {born:0, base:0, p:0, f:0, t:0},
+            mp:     {born:0, base:0, p:0, f:0, t:0},
+            def:    {born:0, base:0, p:0, f:0, t:0},
+            atk:    {born:0, base:0, p:0, f:0, t:0},
+            matk:   {born:0, base:0, p:0, f:0, t:0},
+            str:    {born:0, base:0, p:0, f:0, t:0},
+            int:    {born:0, base:0, p:0, f:0, t:0},
+            dex:    {born:0, base:0, p:0, f:0, t:0},
+            luk:    {born:0, base:0, p:0, f:0, t:0},
+            damage: {born:0, base:0, p:0, f:0, t:0},
+            normal: {born:0, base:0, p:0, f:0, t:0},
+            boss:   {born:0, base:0, p:0, f:0, t:0},
+            final:  {born:0, base:0, p:0, f:0, t:0},
+            ign:    {born:0, base:0, p:0, f:0, t:0},
+            ctr:    {born:0, base:0, p:0, f:0, t:0},
+            ctd:    {born:0, base:0, p:0, f:0, t:0},
+        };
+        this.star = 0;
+        this.arc = 0;
+        this.yua = 0;
         this.getStatsWeight();  // 属性权
-        this.generateBornData();  // 与等级相关  等级、职业
-        this.generateEqData();   // 与装备相关   装备
-        this.generateSkillData();  // 与技能相关 职业、武器
-        this.genenrateOtherAllyData();  // 与联盟相关  联盟
-        this.generateBuffData();  // buff相关
-        this.generateBasicData();  // 一些基础属性，例如百分比加成
-        this.generateOther();   // 其他属性, 其实是detail的预加载  超级属性、内在
-        // todo 内在能力的设置
+        this.updateBornData();  // 与等级相关  等级、职业
         this.loadSkill(); // 加载技能
-        this.generateDetail();
-        // this._updateDetail();
+        this.updateDetail();
     }
-    generateBornData() {
-        let born = {ATK:0, HP:0, STR:4,DEX:4,INT:4,LUK:4};
+    /**
+     * 更新出生数据
+     */
+    updateBornData() {
+        let born = {atk:0,matk:0,hp:0,mp:0, str:4,dex:4,int:4,luk:4};
         let l = this.lv;
         let name = this.job.name;
         if (name != "林之灵" || name != "恶魔复仇者") {
@@ -135,100 +162,93 @@ class MxdRole {
                 born[this.mainStats] = 4 + 5 * l;
             } else {
                 if (l<30) {
-                    born['HP'] = 220 + 90 * l;
+                    born['hp'] = 220 + 90 * l;
                 } else if (l<60) {
-                    born['HP'] = 395 + 90 * l;
+                    born['hp'] = 395 + 90 * l;
                 } else if (l<100) {
-                    born['HP'] = 470 + 90 * l;
+                    born['hp'] = 470 + 90 * l;
                 } else {
-                    born['HP'] = 545 + 90 * l;
+                    born['hp'] = 545 + 90 * l;
                 }
             }
         } else {
             // todo XEN
         }
-        this.born = born;
+        for (let key in born) {
+            this._updateBorn(key, born[key]);
+        }
     }
-    generateEqData() {
-        this.edv = {ATK:0, HP:0, STR:0,DEX:0,INT:0,LUK:0,
-            ATKP:0,HPP:0,STRP:0,DEXP:0,INTP:0,LUKP:0,
-            Damage:0,Boss:0,Ign:0,CTR:0,CTD:0,NDAMAGE:0,Final:0};
-        this.Star = 0;
+    updateSkillData() {
+        // 
     }
-    generateSkillData() {
-        this.sdv = {ATK:0, HP:0, STR:0,DEX:0,INT:0,LUK:0,
-            ATKP:0,HPP:0,STRP:0,DEXP:0,INTP:0,LUKP:0,
-            Damage:0,Boss:0,Ign:0,CTR:0,CTD:0,NDAMAGE:0,Final:0};
+    updateOtherAllyData() {
     }
-    genenrateOtherAllyData() {
-        this.adv = {ATK:0, HP:0, STR:0,DEX:0,INT:0,LUK:0,
-            ATKP:0,HPP:0,STRP:0,DEXP:0,INTP:0,LUKP:0,
-            Damage:0,Boss:0,Ign:0,CTR:0,CTD:0,NDAMAGE:0,Final:0};
-    }
-    generateBuffData() {
-        this.bdv = {ATK:0, HP:0, STR:0,DEX:0,INT:0,LUK:0,
-            ATKP:0,HPP:0,STRP:0,DEXP:0,INTP:0,LUKP:0,STATSP:0,
-            Damage:0,Boss:0,Ign:0,CTR:0,CTD:0,NDAMAGE:0,Final:0};
-    }
-
-    generateBasicData() {
-        this.base = {ATK:0, HP:0, STR:0,DEX:0,INT:0,LUK:0,
-            ATKP:0,HPP:0,STRP:0,DEXP:0,INTP:0,LUKP:0,
-            Damage:0,Boss:0,Ign:0,CTR:0,CTD:0,NDAMAGE:0,Final:0};
-        this.base = _merge(this.base, this.born);
-        this.base = _merge(this.base, this.edv);
-        this.base = _merge(this.base, this.sdv);
-        this.base = _merge(this.base, this.adv);
-
-        let b = this.born, s = this.bdv.STATSP;
-        // this.base.HP += Math.floor(b.HP * s / 100); todo hp检查公式
-        this.base.STR += Math.floor(b.STR * s / 100);
-        this.base.DEX += Math.floor(b.DEX * s / 100);
-        this.base.INT += Math.floor(b.INT * s / 100);
-        this.base.LUK += Math.floor(b.LUK * s / 100);
-
-        this.base.born = JSON.parse(JSON.stringify(this.born));
-        this.base.edv = JSON.parse(JSON.stringify(this.edv));
-        this.base.sdv = JSON.parse(JSON.stringify(this.sdv));
-        this.base.adv = JSON.parse(JSON.stringify(this.adv));
-    }
-
-    generateOther() {
-        // 不受加成
-        this.odv = {ATK:0, HP:0, STR:0,DEX:0,INT:0,LUK:0,
-            Damage:0,Boss:0,Ign:0,CTR:0,CTD:0,NDAMAGE:0};
-        this.Arc = 0; // Arc 不算在odv里
+    updateBuffData() {
     }
 
     /**
-     * 仅用作初始化
+     * 更新所有属性的最终值
      */
-    generateDetail() {
+    _updateTotals() {
+        let a = this.attr;
+        for (let key in a) {
+            this.__updateTotal(key);
+        }
+    }
+    _updateArc() {
+        let t = this.ArcT, lv = this.arc;
+        let d = this.detail;
+        if (typeof(t.p) == 'number') {
+            d[t.p].value += t.v * lv;
+        } else {
+            for (let p in t.p) {
+                d[p].value += t.v * lv;
+            }
+        }
+    }
+    /**
+     * 更新对应属性的最终值
+     * @param {shuxing} key 
+     */
+    __updateTotal(key) {
+        let k = this.attr[key];
+        let b = k.base, p = k.p, f = k.f;
+        k.t = b * (1 + p/100) + f;
+    }
+    _countSxGjl() {
+        // todo
+    }
+    updateDetail() {
+        this._updateTotals();
+        let a = this.attr;
         this.detail = [
-            {propname: "ATK", value: 0},               // 0
-            {propname: "STR", value: 0},
-            {propname: "DEX", value: 0},
-            {propname: "INT", value: 0},
-            {propname: "LUK", value: 0},
-            {propname: "HP", value: 0},
-            {propname: "Damage", value: 0},         // 6
-            {propname: "Boss Damage", value: 0},
-            {propname: "Final Damage", value: 0},
-            {propname: "Ignore Def", value: 0},
-            {propname: "Critical Rate", value: 0},
-            {propname: "CT Damage", value: 0},         // 11
-            {propname: "Star Force", value: 0},
-            {propname: "Arcane", value: 0},
-            {propname: "Base ATK", value: 0},
-            {propname: "Base STR", value: 0},
-            {propname: "Base DEX", value: 0},              // 16
-            {propname: "Base INT", value: 0},
-            {propname: "Base LUK", value: 0},
-            {propname: "Base HP", value: 0},
+            {propname: "攻击力", value: a.atk.t},               
+            {propname: "魔法力", value: a.matk.t},               
+            {propname: "力量", value: a.str.t},
+            {propname: "敏捷", value: a.dex.t},
+            {propname: "智力", value: a.int.t},
+            {propname: "运气", value: a.luk.t},
+            {propname: "血量",  value: a.hp.t},
+            {propname: "伤害", value: a.damage.t},
+            {propname: "Boss伤", value: a.boss.t},
+            {propname: "最终伤", value: a.final.t},
+            {propname: "无视防御", value: a.ign.t},
+            {propname: "暴击率", value: a.ctr.t},
+            {propname: "暴击伤害", value: a.ctd.t},        
+            {propname: "星之力", value: this.star},
+            {propname: "神秘", value: this.arc},
+            {propname: "基础攻击力", value: a.atk.base},
+            {propname: "基础魔法力", value: a.matk.base},
+            {propname: "基础力量", value: a.str.base},
+            {propname: "基础敏捷", value: a.dex.base},             
+            {propname: "基础智力", value: a.int.base},
+            {propname: "基础运气", value: a.luk.base},
+            {propname: "基础血量", value: a.hp.base},
             {propname: "属性攻击力", value: 0},
-            {propname: "怪物攻击力", value: 0},                  // 21
+            {propname: "怪物攻击力", value: 0},                 
             {propname: "Boss攻击力", value: 0}
         ];
+        this._updateArc();  // 添加Arc数据
     }
     /**
      * 加载技能
@@ -237,29 +257,52 @@ class MxdRole {
         let ss = skill[this.job.name];
         if (ss) { // 避免默认职业的问题
             this.buff=ss.b; this.debuff=ss.d; this.passive=ss.p; this.active=ss.a;
-            this.reloadPassive();
+            this._loadPassive();
         }
     }
+    /**
+     * 加载被动技能
+     */
     _loadPassive() {
         let p = this.passive;
         for (let i in p) {
             let s = p[i];
             if (typeof(s.effect)=='object') {
-                this._bind(s.effect, this.sdv);
+                this._updateAttrs(s.effect, 1);
             } else {
                 s.effect(this); 
             }
         }
     }
     /**
-     * 刷新被动技能
+     * 更新已有数据
+     * @param {新属性} n 
+     * @param {加减} w 1 or -1
      */
-    reloadPassive() {
-        _seprate(this.base, this.sdv);
-        this._loadPassive();
-        this.base = _merge(this.base, this.sdv);
-        this.base.sdv = JSON.parse(JSON.stringify(this.sdv));
+    _updateAttrs(n, w) {
+        for (let key in n) {
+            let a = this.attr[key];
+            let v = n[key] * w;
+            if (a) {
+                a.base += v;
+            } else {
+                if (key.endsWith('p')) {
+                    if (key == 'hpp') {
+                        this.attr.hp.p += v;
+                    } else if (key == 'asp') {
+                        this.attr.str.p += v;
+                        this.attr.int.p += v;
+                        this.attr.dex.p += v;
+                        this.attr.luk.p += v;
+                    } else {
+                        key = key.substring(0, 3);
+                        this.attr[key].p += v;
+                    }
+                }
+            }
+        }
     }
+
     updateEquiment() {
         _seprate(this.base, this.base.edv);
         this.base = _merge(this.base, this.edv);
@@ -350,6 +393,22 @@ class MxdRole {
             return this.equipments[t][p];
         }
         return this.equipments[t] == null ? this.equipments[OUTFIT] : this.equipments[t];
+    }
+    /**
+     * 更新出生属性
+     */
+    _updateBorn(attrKey, bornValue) {
+        let origin = this.attr[attrKey].born;
+        this.attr[attrKey].born = bornValue;
+        this.attr[attrKey].base += bornValue - origin;
+        this._updateAttr(attrKey);
+    }
+    /**
+     * 更新具体属性
+     */
+    _updateAttr(attrKey) {
+        let attr = this.attr[attrKey];
+        attr.t = attr.base * (1 + attr.p/100) + attr.f;
     }
     /**
      * 绑定上装备e的属性
@@ -519,31 +578,7 @@ class MxdRole {
     _get(e, key) {
         return e[key] ? e[key] : 0;
     }
-    _updateDetail() {
-        let b = this.base, o = this.odv;
-        this.detail[0].value = parseInt(b.ATK * (1 + b.ATKP/100)) + o.ATK;
-        this.detail[1].value = parseInt(b.STR * (1 + b.STRP/100)) + o.STR;
-        this.detail[2].value = parseInt(b.DEX * (1 + b.DEXP/100)) + o.DEX;
-        this.detail[3].value = parseInt(b.INT * (1 + b.INTP/100)) + o.INT;
-        this.detail[4].value = parseInt(b.LUK * (1 + b.LUKP/100)) + o.LUK;
-        this.detail[5].value = parseInt(b.HP *  (1 + b.HPP/100))  + o.HP ;
-        this.detail[6].value = b.Damage + o.Damage;
-        this.detail[7].value = b.Boss + o.Boss;
-        this.detail[8].value = b.Final;
-        this.detail[9].value = b.Ign + o.Ign;
-        this.detail[10].value = b.CTR  + o.CTR;
-        this.detail[11].value = b.CTD  + o.CTD;
-        this.detail[12].value = this.Star;
-        this.detail[13].value = this.Arc;
-        this.detail[14].value = b.ATK;
-        this.detail[15].value = b.STR;
-        this.detail[16].value = b.DEX;
-        this.detail[17].value = b.INT;
-        this.detail[18].value = b.LUK;
-        this.detail[19].value = b.HP ;
-        this._countArcDetail(); this._countStarDetail();
-        this._computeSxGjl();
-    }
+    
     _countArcDetail() {
         let v = this.Arc * this.ArcT.v;
         if (this.ArcT != ArcW.XEN) {
